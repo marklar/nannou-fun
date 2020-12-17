@@ -1,5 +1,6 @@
 // 'prelude': convenient access to most-common items
 use nannou::prelude::*;
+use nannou::noise::*;
 
 fn main() {
     // build the app
@@ -32,7 +33,8 @@ impl Thing {
 struct Model {
     // Why the '_'?
     // _window: window::Id,
-    things: Vec<Thing>
+    things: Vec<Thing>,
+    noise: Perlin
 }
 
 const N_THINGS: usize = 2000;
@@ -81,14 +83,20 @@ fn init_model(app: &App) -> Model {
         .view(view)   // It's rendered via the 'view' fn.
         .build().unwrap();
 
+    let noise = Perlin::new();
+    Model { things: mk_things(), noise }
+}
+
+
+fn mk_things() -> Vec<Thing> {
     // Is there a nice FP way to build this Vec?
     let mut things = Vec::new();
     for _i in 0..N_THINGS {
-        let radius = 1.0 + (random::<f32>() * 2.0);
+        let radius = 1.5 + (random::<f32>() * 2.0);
         let t = Thing::new(random_pt(), random_color(), radius);
         things.push(t)
     }
-    Model { things }
+    things
 }
 
 //------------------------
@@ -121,10 +129,30 @@ fn update(
 ) {
     // 'Adding' two vectors gets you to a new point.
     for thing in model.things.iter_mut() {
-        thing.position += jiggle();
+        // let change = jiggle();
+        let change = noise_jiggle(model.noise, thing.position);
+        thing.position += change;
     }
 }
 
+
+fn noise_jiggle(noise: Perlin, pt: Vector2<f32>) -> Vector2<f32> {
+    // What is the noise at the position of my thing?
+    // Noise is not meant to work over the range of the entire screen.
+    // It's meant to work on very small scales.
+    let sn = 0.01;  // 0.01    // scaling factor
+    let noise_0 = noise.get([
+        sn * pt.x as f64,
+        sn * pt.y as f64,
+        0.0  // 3rd dimension?
+    ]);
+    let noise_1 = noise.get([
+        sn * pt[0] as f64,
+        sn * pt[1] as f64,
+        1.0  // 3rd dimension?
+    ]);
+    vec2(noise_0 as f32, noise_1 as f32)
+}
 
 // Return a _small_ 2d vector.
 fn jiggle() -> Vector2<f32> {
@@ -136,7 +164,7 @@ fn jiggle() -> Vector2<f32> {
 fn mouse_moved(
     _app: &App,
     _model: &mut Model,
-    _pos: Point2         // Where the mouse moved _to_?
+    _pos: nannou::prelude::Point2         // Where the mouse moved _to_?
 ) {
 }
 
@@ -156,7 +184,9 @@ fn view(
     frame: Frame
 ) {
     let draw = app.draw();
-    draw.background().color(BLACK);
+    if app.elapsed_frames() == 1 {
+        draw.background().color(BLACK);
+    }
 
     // 'elapsed' = frames since start of program.
     // Divide by 60 => ~seconds (~60 fps).
