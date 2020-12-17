@@ -129,8 +129,8 @@ fn update(
 ) {
     // 'Adding' two vectors gets you to a new point.
     for thing in model.things.iter_mut() {
-        // let change = jiggle();
-        let change = noise_jiggle(model.noise, thing.position);
+        let change = jiggle();
+        // let change = noise_jiggle(model.noise, thing.position);
         thing.position += change;
     }
 }
@@ -184,8 +184,16 @@ fn view(
     frame: Frame
 ) {
     let draw = app.draw();
+
     if app.elapsed_frames() == 1 {
+        // Start out w/ black background.
         draw.background().color(BLACK);
+    } else {
+        // _Almost_ black out the screen.
+        let mostly_transparent_black = srgba(0.0, 0.0, 0.0, 0.05);
+        draw.rect()
+            .w_h(SCREEN_WIDTH as f32, SCREEN_HEIGHT as f32)
+            .color(mostly_transparent_black);
     }
 
     // 'elapsed' = frames since start of program.
