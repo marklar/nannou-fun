@@ -1,0 +1,29 @@
+#+TITLE: Creative Coding with Rust
+
+* taking inspiration from here
+https://www.youtube.com/watch?v=Ml6tpyTyXhM
+
+* what is nannou?
+** Nannou is a framework. Kinda like Elm.
+** uses Metal via [[https://en.wikipedia.org/wiki/WebGPU][WebGPU]]
+*** WebGPU:
+**** to replace WebGL
+**** intended to provide high performance:
+***** on modern graphics APIs
+- Vulkan (cross-platform, low-level)
+- Metal (Apple)
+- Direct3D (Windows)
+***** across mobile & desktop platforms
+
+
+* GUIDE
+https://guide.nannou.cc/welcome.html
+
+
+* setup
+** Cargo.toml: add dependency:
+[dependencies]
+nannou = "0.15"
+
+* run
+cargo run --release
