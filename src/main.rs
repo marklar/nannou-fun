@@ -42,26 +42,6 @@ const SCREEN_WIDTH: u32 = 2048;
 const SCREEN_HEIGHT: u32 = 1400;
 
 
-// Return a number between (-0.5 * sz) and (0.5 * sz).
-// The origin (0,0) is in the MIDDLE.
-fn random_pt() -> Vector2<f32> {
-    fn random_offset(sz: f32) -> f32 {
-        (random::<f32>() - 0.5) * sz
-    }
-    let x = random_offset(SCREEN_WIDTH as f32);
-    let y = random_offset(SCREEN_HEIGHT as f32);
-    vec2(x, y)
-}
-
-fn random_color() -> Color {
-    // TODO: More officient way to generate random numbers.
-    // (This is called from a tight loop.)
-    let colors = [DODGERBLUE, WHITE, STEELBLUE, LIGHTSKYBLUE, DARKTURQUOISE];
-    let idx = random::<usize>() % colors.len();
-    colors[idx]
-}
-
-
 // Run just once, at the beginning.
 //
 // The "setup" stage of our app. Do things such as:
@@ -99,6 +79,26 @@ fn mk_things() -> Vec<Thing> {
     things
 }
 
+
+// Return a number between (-0.5 * sz) and (0.5 * sz).
+// The origin (0,0) is in the MIDDLE.
+fn random_pt() -> Vector2<f32> {
+    fn random_offset(sz: f32) -> f32 {
+        (random::<f32>() - 0.5) * sz
+    }
+    let x = random_offset(SCREEN_WIDTH as f32);
+    let y = random_offset(SCREEN_HEIGHT as f32);
+    vec2(x, y)
+}
+
+fn random_color() -> Color {
+    // TODO: More officient way to generate random numbers.
+    // (This is called from a tight loop.)
+    let colors = [DODGERBLUE, WHITE, STEELBLUE, LIGHTSKYBLUE, DARKTURQUOISE];
+    let idx = random::<usize>() % colors.len();
+    colors[idx]
+}
+
 //------------------------
 // UPDATE fns
 
@@ -129,18 +129,18 @@ fn update(
 ) {
     // 'Adding' two vectors gets you to a new point.
     for thing in model.things.iter_mut() {
-        let change = jiggle();
-        // let change = noise_jiggle(model.noise, thing.position);
-        thing.position += change;
+        let jiggle =
+            random_jiggle();
+            // noisy_jiggle(model.noise, thing.position);
+        thing.position += jiggle;
     }
 }
 
-
-fn noise_jiggle(noise: Perlin, pt: Vector2<f32>) -> Vector2<f32> {
+fn noisy_jiggle(noise: Perlin, pt: Vector2<f32>) -> Vector2<f32> {
     // What is the noise at the position of my thing?
     // Noise is not meant to work over the range of the entire screen.
     // It's meant to work on very small scales.
-    let sn = 0.01;  // 0.01    // scaling factor
+    let sn = 0.005;  // 0.01    // scaling factor
     let noise_0 = noise.get([
         sn * pt.x as f64,
         sn * pt.y as f64,
@@ -155,7 +155,7 @@ fn noise_jiggle(noise: Perlin, pt: Vector2<f32>) -> Vector2<f32> {
 }
 
 // Return a _small_ 2d vector.
-fn jiggle() -> Vector2<f32> {
+fn random_jiggle() -> Vector2<f32> {
     fn bump() -> f32 { 3.0 * (random::<f32>() - 0.5) }
     vec2(bump(), bump())
 }
@@ -185,15 +185,12 @@ fn view(
 ) {
     let draw = app.draw();
 
+    draw.background().color(BLACK);
     if app.elapsed_frames() == 1 {
         // Start out w/ black background.
         draw.background().color(BLACK);
     } else {
-        // _Almost_ black out the screen.
-        let mostly_transparent_black = srgba(0.0, 0.0, 0.0, 0.05);
-        draw.rect()
-            .w_h(SCREEN_WIDTH as f32, SCREEN_HEIGHT as f32)
-            .color(mostly_transparent_black);
+        // show_history(app);
     }
 
     // 'elapsed' = frames since start of program.
@@ -209,6 +206,17 @@ fn view(
     
     draw.to_frame(app, &frame).unwrap();
 }
+
+
+// _Almost_ black out the screen.
+fn show_history(app: &App) {
+    let draw = app.draw();
+    let mostly_transparent_black = srgba(0.0, 0.0, 0.0, 0.05);
+    draw.rect()
+        .w_h(SCREEN_WIDTH as f32, SCREEN_HEIGHT as f32)
+        .color(mostly_transparent_black);
+}
+
 
 fn view_revolving_circles(
     app: &App,
